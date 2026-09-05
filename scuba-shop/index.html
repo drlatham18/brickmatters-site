@@ -5,6 +5,8 @@
 <meta name="robots" content="index,follow">
 <title>Scuba Shop - Brick Matters</title>
 <style>
+[hidden]{display:none!important}
+html:not([data-figures-fresh="true"]) [data-live-stat],html:not([data-figures-fresh="true"]) .nums,html:not([data-figures-fresh="true"]) .bar,html:not([data-figures-fresh="true"]) .row small{display:none}
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#101014;--card:#18181e;--ink:#fff;--muted:#9a9aa6;--accent:#ff5c6e;--line:#2a2a33}
 body{background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
@@ -35,9 +37,10 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
 .row b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row small{color:var(--muted)}
 </style>
+<meta name="brickideas-data-as-of" content="">
 </head><body>
 
-<div class="h">891 to go</div>
+<div class="h" data-live-stat>891 to go</div>
 <h1>Scuba Shop</h1>
 <div class="by">by Robsmediayt</div>
 <img class="shot" alt="Scuba Shop by Robsmediayt" src="https://ideascdn.lego.com/media/generate/lego_ci/c1a6c3e6-0736-4c43-9623-f8b54d9e81ab/original:0:0/webp">
@@ -69,18 +72,54 @@ footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:v
 <a class="btn ghost" href="../">See the rest of this week's builds</a>
 
 <footer>@brikmaster95 &middot; Brick Matters is a fan project. Not affiliated with, authorized by, or endorsed by the LEGO Group. LEGO&reg; is a trademark of the LEGO Group.</footer>
-<script>
-(function(){
-  var ua = navigator.userAgent || "";
-  var inApp = /Instagram|FBAN|FBAV|FB_IAB|TikTok|BytedanceWebview|Snapchat|Twitter|LinkedInApp|Pinterest/i.test(ua);
-  if (!inApp) return;
-  var w = document.getElementById('inapp');
-  if (w) w.className = 'warn on';
-  var c = document.getElementById('copy');
-  if (c) c.onclick = function(e){
-    e.preventDefault();
-    navigator.clipboard && navigator.clipboard.writeText(window.location.href);
-    c.textContent = 'Link copied - now paste it in Safari or Chrome';
+<script>(function () {
+  function freshness() {
+    var meta = document.querySelector('meta[name="brickideas-data-as-of"]');
+    var checked = meta && Date.parse(meta.content);
+    var stale = !checked || !Number.isFinite(checked) || Date.now() - checked > 36 * 3600000 || checked > Date.now() + 3600000;
+    document.documentElement.dataset.figuresFresh = String(!stale);
+    var note = document.getElementById('freshness-note');
+    if (!note) {
+      note = document.createElement('p'); note.id = 'freshness-note';
+      document.body.insertBefore(note, document.body.firstChild);
+    }
+    note.textContent = stale ? 'Figures need a refresh. Check current support and deadlines on LEGO Ideas.'
+      : 'Figures checked ' + new Date(checked).toLocaleString() + '.';
+    document.querySelectorAll('[data-live-stat], .nums, .bar, .row small').forEach(function (el) {
+      el.hidden = stale;
+    });
+    document.querySelectorAll('[data-deadline]').forEach(function (el) {
+      var end = Date.parse(el.dataset.deadline);
+      if (!stale && Number.isFinite(end)) {
+        var days = Math.ceil((end - Date.now()) / 86400000);
+        el.textContent = days > 0 ? days + (days === 1 ? ' day left' : ' days left')
+          : 'Deadline passed — check status on LEGO Ideas';
+      }
+    });
+  }
+  freshness();
+  setInterval(freshness, 60000);
+  document.addEventListener('visibilitychange', freshness);
+  var inApp = /Instagram|FBAN|FBAV|FB_IAB|TikTok|BytedanceWebview|Snapchat|Twitter|LinkedInApp|Pinterest/i.test(navigator.userAgent || '');
+  var warning = document.getElementById('inapp');
+  if (inApp && warning) warning.className = 'warn on';
+  var copy = document.getElementById('copy');
+  if (copy) copy.onclick = async function (event) {
+    event.preventDefault();
+    try {
+      if (!navigator.clipboard) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(window.location.href);
+      copy.textContent = 'Link copied — paste it in Safari or Chrome';
+    } catch (_) {
+      copy.textContent = 'Select and copy the link below';
+      var input = document.getElementById('copy-fallback');
+      if (!input) {
+        input = document.createElement('input'); input.id = 'copy-fallback';
+        input.readOnly = true; input.setAttribute('aria-label', 'Link to copy');
+        input.style.width = '100%'; copy.insertAdjacentElement('afterend', input);
+      }
+      input.value = window.location.href; input.focus(); input.select();
+    }
   };
 })();
 </script>
